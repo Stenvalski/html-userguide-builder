@@ -1,0 +1,590 @@
+/*
+ * Theme: Handbook — long-form user guide with sidebar ToC and search.
+ * Use for: reference documentation, manuals, multi-section how-tos —
+ * content that people search and dip into rather than read start-to-end.
+ * Pairs with handbook.js (not deck.js — this is a normal scrolling page).
+ *
+ * Same warm, instructional family as Field Guide: paper background,
+ * indigo accent. Content can mix text, tables, images and video.
+ *
+ * Keys: /  or Ctrl/Cmd+K  search | T  show/hide contents
+ */
+
+:root {
+  --hb-bg: #faf7f2;
+  --hb-panel: #ffffff;
+  --hb-fg: #2b2a33;
+  --hb-muted: #77716a;
+  --hb-accent: #4f46e5;
+  --hb-accent-soft: #e9e7fc;
+  --hb-border: #e4ded4;
+  --hb-warn: #b45309;
+  --hb-ok: #15803d;
+  --hb-sidebar-w: 18rem;
+  --hb-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --hb-font-mono: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+body.handbook {
+  margin: 0;
+  background: var(--hb-bg);
+  color: var(--hb-fg);
+  font-family: var(--hb-font);
+  font-size: clamp(15px, 1.1vw, 17px);
+  line-height: 1.65;
+  padding-left: var(--hb-sidebar-w);
+  transition: padding-left 0.3s ease;
+}
+
+body.handbook.hb-toc-hidden { padding-left: 0; }
+
+.handbook a { color: var(--hb-accent); }
+
+.handbook kbd {
+  display: inline-block;
+  padding: 0.1em 0.5em;
+  border: 1px solid #d9d2c7;
+  border-bottom-width: 2px;
+  border-radius: 5px;
+  font-family: var(--hb-font-mono);
+  font-size: 0.85em;
+  background: #fff;
+}
+
+/* named button / menu item in prose */
+.handbook .ui {
+  display: inline-block;
+  background: #fff;
+  border: 1px solid #d9d2c7;
+  border-radius: 7px;
+  padding: 0.05em 0.55em;
+  font-size: 0.9em;
+  font-weight: 600;
+  box-shadow: 0 1px 0 #d9d2c7;
+  white-space: nowrap;
+}
+
+/* ---------- sidebar ---------- */
+
+.hb-sidebar {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: var(--hb-sidebar-w);
+  background: var(--hb-panel);
+  border-right: 1px solid var(--hb-border);
+  display: flex;
+  flex-direction: column;
+  z-index: 10;
+  transition: transform 0.3s ease;
+}
+
+.hb-toc-hidden .hb-sidebar { transform: translateX(-100%); }
+
+.hb-brand {
+  padding: 1.3rem 1.4rem 1rem;
+  border-bottom: 1px solid var(--hb-border);
+}
+
+.hb-brand .title { font-weight: 700; font-size: 1.02rem; }
+
+.hb-brand .sub {
+  font-size: 0.78rem;
+  color: var(--hb-muted);
+  margin-top: 0.15em;
+}
+
+/* search box (injected by handbook.js) */
+.hb-search { padding: 1rem 1.4rem 0.4rem; }
+
+.hb-search input {
+  width: 100%;
+  font: inherit;
+  font-size: 0.9rem;
+  color: var(--hb-fg);
+  background: var(--hb-bg);
+  border: 1px solid var(--hb-border);
+  border-radius: 8px;
+  padding: 0.5em 0.8em;
+  outline: none;
+}
+
+.hb-search input:focus {
+  border-color: var(--hb-accent);
+  box-shadow: 0 0 0 3px var(--hb-accent-soft);
+}
+
+.hb-search-status {
+  font-size: 0.74rem;
+  color: var(--hb-muted);
+  min-height: 1.4em;
+  padding: 0.35em 0.2em 0;
+}
+
+/* table of contents */
+.hb-toc {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.6rem 0.8rem 1.5rem;
+}
+
+.hb-toc ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.hb-toc ul ul { margin: 0.1em 0 0.4em; }
+
+.hb-toc a {
+  display: block;
+  padding: 0.38em 0.7em;
+  border-radius: 7px;
+  color: var(--hb-fg);
+  text-decoration: none;
+  font-size: 0.9rem;
+  line-height: 1.35;
+}
+
+.hb-toc ul ul a {
+  padding-left: 1.7em;
+  font-size: 0.84rem;
+  color: var(--hb-muted);
+}
+
+.hb-toc a:hover { background: var(--hb-bg); }
+
+.hb-toc a.active {
+  background: var(--hb-accent-soft);
+  color: var(--hb-accent);
+  font-weight: 600;
+}
+
+/* keyboard hint at the sidebar's foot */
+.hb-sidebar .hb-hints {
+  padding: 0.8rem 1.4rem;
+  border-top: 1px solid var(--hb-border);
+  font-size: 0.72rem;
+  color: var(--hb-muted);
+  line-height: 2;
+}
+
+/* ToC toggle button (injected by handbook.js) */
+.hb-toggle {
+  position: fixed;
+  top: 0.9rem;
+  left: 0.9rem;
+  z-index: 20;
+  appearance: none;
+  border: 1px solid var(--hb-border);
+  background: var(--hb-panel);
+  color: var(--hb-muted);
+  font-size: 1rem;
+  line-height: 1;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 10px;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(43, 42, 51, 0.08);
+  transition: left 0.3s ease, color 0.2s;
+}
+
+.hb-toggle:hover { color: var(--hb-accent); border-color: var(--hb-accent); }
+
+body:not(.hb-toc-hidden) .hb-toggle { left: calc(var(--hb-sidebar-w) + 0.9rem); }
+
+/* ---------- hero ---------- */
+
+.hb-hero {
+  min-height: 100vh;
+  min-height: 100svh;   /* mobile browsers: viewport minus chrome */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+  background:
+    radial-gradient(ellipse 70% 100% at 85% 0%, var(--hb-accent-soft), transparent 65%),
+    var(--hb-panel);
+  border-bottom: 1px solid var(--hb-border);
+  padding: clamp(3rem, 8vh, 5rem) clamp(1.5rem, 6vw, 4rem) clamp(2.2rem, 6vh, 3.5rem);
+}
+
+.hb-hero-inner {
+  max-width: 70rem;
+  width: 100%;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
+  gap: clamp(1.5rem, 4vw, 3.5rem);
+  align-items: center;
+}
+
+.hb-hero .eyebrow {
+  display: block;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--hb-accent);
+  margin-bottom: 1em;
+}
+
+.hb-hero h1 {
+  font-size: clamp(1.9rem, 4.5vw, 3rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  margin: 0 0 0.5em;
+  color: #211f2b;
+}
+
+.hb-hero .lead {
+  font-size: clamp(1rem, 1.8vw, 1.15rem);
+  color: #4c4a56;
+  margin: 0;
+}
+
+.hb-hero .hb-meta {
+  margin-top: 1.6em;
+  font-size: 0.8rem;
+  color: var(--hb-muted);
+  display: flex;
+  gap: 1.8em;
+  flex-wrap: wrap;
+}
+
+/* hero image slot: drop an <img> in .hb-hero-art */
+.hb-hero-art img {
+  display: block;
+  width: 100%;
+  border-radius: 14px;
+  border: 1px solid var(--hb-border);
+  box-shadow: 0 14px 40px rgba(43, 42, 51, 0.14);
+}
+
+.hb-hero-art .placeholder {
+  border: 1px dashed #cfc7ba;
+  border-radius: 14px;
+  padding: clamp(2.5rem, 8vh, 5rem) 1.5rem;
+  text-align: center;
+  color: #b3aca2;
+  font-size: 0.85rem;
+  background:
+    repeating-linear-gradient(-45deg, transparent, transparent 12px,
+      #f6f2ea 12px, #f6f2ea 24px);
+}
+
+@media (max-width: 720px) {
+  .hb-hero-inner { grid-template-columns: 1fr; }
+}
+
+/* scroll hint at the hero's foot — shown on small screens */
+.hb-scrollhint {
+  position: absolute;
+  bottom: 1.6rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--hb-font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--hb-muted);
+}
+
+.hb-scrollhint::after {
+  content: "";
+  width: 1px;
+  height: 2.2rem;
+  background: linear-gradient(180deg, var(--hb-accent), transparent);
+  animation: hb-drip 1.8s ease-in-out infinite;
+}
+
+@keyframes hb-drip {
+  0%   { transform: scaleY(0); transform-origin: top; opacity: 1; }
+  70%  { transform: scaleY(1); transform-origin: top; opacity: 1; }
+  100% { transform: scaleY(1); transform-origin: top; opacity: 0; }
+}
+
+@media (max-width: 900px) {
+  .hb-scrollhint { display: flex; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hb-scrollhint::after { animation: none; }
+}
+
+/* ---------- content column ---------- */
+
+.hb-content {
+  max-width: 70rem;
+  margin: 0 auto;
+  padding: 2.5rem clamp(1.5rem, 5vw, 3rem) 6rem;
+}
+
+.hb-content h2 {
+  font-size: clamp(1.4rem, 2.6vw, 1.8rem);
+  font-weight: 700;
+  color: #211f2b;
+  letter-spacing: -0.01em;
+  margin: 2.4em 0 0.7em;
+  padding-top: 0.8em;
+  border-top: 1px solid var(--hb-border);
+  scroll-margin-top: 1.5rem;
+}
+
+.hb-content h2:first-child { margin-top: 0; border-top: none; padding-top: 0; }
+
+.hb-content h3 {
+  font-size: 1.12rem;
+  font-weight: 700;
+  margin: 1.8em 0 0.5em;
+  scroll-margin-top: 1.5rem;
+}
+
+.hb-content p, .hb-content ul, .hb-content ol { margin: 0 0 1em; }
+
+.hb-content code {
+  font-family: var(--hb-font-mono);
+  font-size: 0.88em;
+  background: #f1ece4;
+  border-radius: 4px;
+  padding: 0.08em 0.35em;
+}
+
+.hb-content pre {
+  background: #211f2b;
+  color: #e8e6f0;
+  border-radius: 10px;
+  padding: 1em 1.3em;
+  overflow-x: auto;
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+
+.hb-content pre code { background: none; padding: 0; color: inherit; }
+
+/* code blocks from the Handbook Builder: language badge + syntax tokens
+   (highlighting is baked into the HTML at export — no JS needed here) */
+.hb-content pre.hb-code { position: relative; }
+
+.hb-content pre.hb-code[data-lang]::before {
+  content: attr(data-lang);
+  position: absolute;
+  top: 0.55em;
+  right: 1em;
+  font-family: var(--hb-font-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.08em;
+  color: #8b87a0;
+}
+
+.hb-content .tok-c { color: #8b87a0; font-style: italic; }
+.hb-content .tok-s { color: #a8d8a0; }
+.hb-content .tok-n { color: #f0b37e; }
+.hb-content .tok-k { color: #9db4ff; }
+.hb-content .tok-v { color: #d8b4fe; }
+
+/* ---------- tables ---------- */
+
+.hb-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.2em 0 1.5em;
+  font-size: 0.92em;
+  background: var(--hb-panel);
+  border: 1px solid var(--hb-border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+/* border-radius needs this on wrapped tables; harmless otherwise */
+.hb-content table { border-style: hidden; box-shadow: 0 0 0 1px var(--hb-border); }
+
+.hb-content th, .hb-content td {
+  text-align: left;
+  padding: 0.6em 0.9em;
+  border-bottom: 1px solid var(--hb-border);
+  vertical-align: top;
+}
+
+.hb-content th {
+  background: #f4f0e8;
+  font-size: 0.8em;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--hb-muted);
+}
+
+.hb-content tr:last-child td { border-bottom: none; }
+
+/* wide tables scroll inside their own box */
+.hb-table-scroll { overflow-x: auto; margin: 1.2em 0 1.5em; }
+.hb-table-scroll table { margin: 0; }
+
+/* ---------- images & figures ---------- */
+
+.hb-content img {
+  max-width: 100%;
+  border-radius: 10px;
+  border: 1px solid var(--hb-border);
+}
+
+.hb-content figure { margin: 1.4em 0 1.6em; }
+
+.hb-content figure img { width: 100%; }
+
+/* figure width options (Handbook Builder emits these) */
+.hb-content figure.hb-w-full { width: 100%; }
+.hb-content figure.hb-w-1-2  { width: 50%; }
+.hb-content figure.hb-w-1-3  { width: 33.333%; }
+.hb-content figure.hb-w-1-4  { width: 25%; }
+.hb-content figure.hb-w-1-5  { width: 20%; }
+
+@media (max-width: 720px) {
+  .hb-content figure[class*="hb-w-"] { width: 100%; }
+}
+
+.hb-content figcaption {
+  font-size: 0.82rem;
+  color: var(--hb-muted);
+  margin-top: 0.6em;
+  text-align: center;
+}
+
+/* screenshot in a mock window frame (same idea as the Field Guide deck) */
+.hb-screen {
+  background: #fff;
+  border: 1px solid var(--hb-border);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(43, 42, 51, 0.08);
+  overflow: hidden;
+  margin: 1.3em 0 1.6em;
+}
+
+.hb-screen .bar {
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+  padding: 0.55em 0.9em;
+  background: #f1ece4;
+  border-bottom: 1px solid var(--hb-border);
+}
+
+.hb-screen .bar i { width: 0.65em; height: 0.65em; border-radius: 50%; background: #d5cec3; }
+
+.hb-screen .bar .addr {
+  flex: 1;
+  margin-left: 0.6em;
+  background: #fff;
+  border-radius: 6px;
+  font-family: var(--hb-font-mono);
+  font-size: 0.68rem;
+  color: var(--hb-muted);
+  padding: 0.25em 0.8em;
+}
+
+.hb-screen img { display: block; width: 100%; border: none; border-radius: 0; }
+
+.hb-screen .placeholder {
+  padding: clamp(2rem, 6vh, 4rem) 1.5rem;
+  text-align: center;
+  color: #b3aca2;
+  font-size: 0.9rem;
+  background:
+    repeating-linear-gradient(-45deg, transparent, transparent 12px,
+      #f6f2ea 12px, #f6f2ea 24px);
+}
+
+/* ---------- video ---------- */
+/* Wrap a <video> or an <iframe> embed in .hb-video — it keeps 16:9
+   and never overflows the column. */
+
+.hb-video {
+  aspect-ratio: 16 / 9;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--hb-border);
+  box-shadow: 0 8px 24px rgba(43, 42, 51, 0.08);
+  margin: 1.3em 0 1.6em;
+  background: #211f2b;
+}
+
+.hb-video video,
+.hb-video iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+.hb-video .placeholder {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #8b87a0;
+  font-size: 0.9rem;
+}
+
+/* ---------- callouts (same vocabulary as the Field Guide deck) ---------- */
+
+.hb-callout {
+  border-radius: 10px;
+  padding: 0.9em 1.2em 0.9em 3em;
+  margin: 1.2em 0;
+  position: relative;
+  font-size: 0.94rem;
+  background: var(--hb-accent-soft);
+  color: #37327a;
+}
+
+.hb-callout::before { position: absolute; left: 1em; top: 0.85em; font-size: 1.1em; }
+
+.hb-callout.tip::before  { content: "\1F4A1"; }
+.hb-callout.note::before { content: "\1F4CC"; }
+
+.hb-callout.warn { background: #fdf0e3; color: #7c3f10; }
+.hb-callout.warn::before { content: "\26A0\FE0F"; }
+
+.hb-callout.ok { background: #e6f4ea; color: #14532d; }
+.hb-callout.ok::before { content: "\2705"; }
+
+/* ---------- search highlights ---------- */
+
+mark.hb-hit {
+  background: #fde68a;
+  color: inherit;
+  border-radius: 3px;
+  padding: 0.02em 0.1em;
+}
+
+mark.hb-hit.current {
+  background: #f59e0b;
+  color: #fff;
+  outline: 2px solid #b45309;
+}
+
+/* ---------- responsive & print ---------- */
+
+@media (max-width: 900px) {
+  body.handbook { padding-left: 0; }
+  .hb-sidebar { box-shadow: 0 0 40px rgba(43, 42, 51, 0.25); }
+  body:not(.hb-toc-hidden) .hb-toggle { left: calc(var(--hb-sidebar-w) + 0.9rem); }
+}
+
+@media print {
+  body.handbook { padding-left: 0; }
+  .hb-sidebar, .hb-toggle { display: none !important; }
+  .hb-hero { border-bottom: 2px solid #000; }
+  mark.hb-hit { background: none; outline: none; }
+}

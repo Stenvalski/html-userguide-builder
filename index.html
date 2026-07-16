@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Handbook — user guide template &amp; builder</title>
+<style>
+* { box-sizing: border-box; }
+
+:root {
+  --bg: #0f1117;
+  --card: #161923;
+  --fg: #e8ebf2;
+  --muted: #8b93a7;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  padding: 3rem 1.5rem;
+}
+
+.wrap { max-width: 46rem; width: 100%; }
+
+h1 { font-size: clamp(1.8rem, 4vw, 2.6rem); margin: 0 0 0.3em; letter-spacing: -0.02em; }
+
+.sub { color: var(--muted); max-width: 38rem; line-height: 1.6; margin: 0 0 2.5rem; }
+
+.sub kbd {
+  border: 1px solid #333a4d;
+  border-bottom-width: 2px;
+  border-radius: 5px;
+  padding: 0.05em 0.45em;
+  font-size: 0.85em;
+  font-family: ui-monospace, Menlo, monospace;
+}
+
+#cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+  gap: 0.7rem;
+}
+
+.card {
+  position: relative;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+
+.card::before, .card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  opacity: 0;
+  transition: opacity 500ms;
+  pointer-events: none;
+}
+
+.card::before {
+  background: radial-gradient(650px circle at var(--mouse-x) var(--mouse-y),
+    rgba(255, 255, 255, 0.05), transparent 40%);
+  z-index: 3;
+}
+
+.card::after {
+  background: radial-gradient(480px circle at var(--mouse-x) var(--mouse-y),
+    var(--glow, rgba(255, 255, 255, 0.4)), transparent 40%);
+  z-index: 1;
+}
+
+#cards:hover > .card::after { opacity: 1; }
+.card:hover::before { opacity: 1; }
+
+.card-content {
+  position: relative;
+  z-index: 2;
+  background: var(--card);
+  border-radius: inherit;
+  margin: 1px;
+  padding: 1.6rem 1.5rem 1.4rem;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.card .swatch {
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 9px;
+  margin-bottom: 1.1rem;
+}
+
+.card h2 { font-size: 1.15rem; margin: 0 0 0.35em; }
+
+.card .use {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 0.8em;
+}
+
+.card p { font-size: 0.9rem; color: var(--muted); line-height: 1.55; margin: 0; flex: 1; }
+
+.card .open { margin-top: 1.2rem; font-size: 0.85rem; color: #9db4ff; }
+
+.foot {
+  margin-top: 2.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #232838;
+  color: var(--muted);
+  font-size: 0.88rem;
+  line-height: 1.7;
+}
+
+.foot a { color: #9db4ff; }
+.foot code {
+  font-family: ui-monospace, Menlo, monospace;
+  font-size: 0.85em;
+  background: #1c2130;
+  border-radius: 4px;
+  padding: 0.1em 0.4em;
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Handbook</h1>
+  <p class="sub">A long-form user guide page &mdash; sidebar table of contents,
+  full-text search, full-viewport hero &mdash; and a no-code builder that
+  writes it for you. No dependencies, no build step.</p>
+
+  <div id="cards">
+    <a class="card" href="template-handbook.html" style="--glow: rgba(129, 120, 255, 0.45);">
+      <div class="card-content">
+        <div class="swatch" style="background: linear-gradient(135deg, #ffffff 30%, #faf7f2 30%, #faf7f2 55%, #4f46e5 55%);"></div>
+        <div class="use">Reference docs &middot; manuals &middot; searchable guides</div>
+        <h2>Handbook template</h2>
+        <p>Not a deck — a long-form documentation page. Full-viewport hero with
+        title and image, sidebar table of contents built from your headings
+        (<kbd>T</kbd> toggles it), full-text search on
+        <kbd>/</kbd>, and styled tables, figures and video embeds.</p>
+        <div class="open">Open template &rarr;</div>
+      </div>
+    </a>
+
+    <a class="card" href="builder/" style="--glow: rgba(110, 231, 160, 0.4);">
+      <div class="card-content">
+        <div class="swatch" style="background: linear-gradient(135deg, #faf7f2 55%, #15803d 55%);"></div>
+        <div class="use">No-code authoring &middot; notebook-style editor</div>
+        <h2>Handbook Builder</h2>
+        <p>Write a guide without touching HTML. Notebook-style cells for text,
+        images and video — headings, lists, bold and links from a toolbar —
+        autosaved in the browser, then exported as one self-contained
+        Handbook-template .html file.</p>
+        <div class="open">Open builder &rarr;</div>
+      </div>
+    </a>
+  </div>
+
+  <p class="foot">
+    Make your own: copy <code>template-handbook.html</code> and write your
+    content, or use the no-code <a href="builder/">builder</a>. Details in
+    <a href="README.md">README.md</a>.
+  </p>
+</div>
+
+<script>
+document.getElementById('cards').onmousemove = function (e) {
+  for (const card of document.getElementsByClassName('card')) {
+    const rect = card.getBoundingClientRect();
+    card.style.setProperty('--mouse-x', (e.clientX - rect.left) + 'px');
+    card.style.setProperty('--mouse-y', (e.clientY - rect.top) + 'px');
+  }
+};
+</script>
+</body>
+</html>

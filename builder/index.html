@@ -1,0 +1,1128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Handbook Builder</title>
+<style>
+/* ————— builder chrome (the tool itself, not the output) ————— */
+:root {
+  --bg: #faf7f2;
+  --panel: #ffffff;
+  --fg: #2b2a33;
+  --muted: #77716a;
+  --accent: #4f46e5;
+  --accent-soft: #e9e7fc;
+  --border: #e4ded4;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.bd-top {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.7rem 1.2rem;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+}
+
+.bd-top .brand { font-weight: 700; }
+.bd-top .brand .sub { font-weight: 400; font-size: 0.78rem; color: var(--muted); margin-left: 0.6em; }
+.bd-top .spacer { flex: 1; }
+
+button {
+  font: inherit;
+  cursor: pointer;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--fg);
+  padding: 0.4em 0.9em;
+}
+
+button:hover { border-color: var(--accent); color: var(--accent); }
+
+button.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  font-weight: 600;
+}
+
+button.primary:hover { background: #4338ca; color: #fff; }
+
+body { padding-left: 16rem; }   /* room for the draft ToC */
+
+main { max-width: 70rem; margin: 0 auto; padding: 1.5rem 1.2rem 8rem; }
+
+/* draft ToC sidebar */
+.bd-side {
+  position: fixed;
+  top: 3.6rem;
+  bottom: 0;
+  left: 0;
+  width: 16rem;
+  background: var(--panel);
+  border-right: 1px solid var(--border);
+  padding: 1rem 0.9rem 2rem;
+  overflow-y: auto;
+  z-index: 10;
+}
+
+.bd-side .label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0 0.6rem 0.6rem;
+}
+
+#bd-toc a {
+  display: block;
+  padding: 0.32em 0.6em;
+  border-radius: 6px;
+  color: var(--fg);
+  text-decoration: none;
+  font-size: 0.86rem;
+  line-height: 1.35;
+  cursor: pointer;
+}
+
+#bd-toc a.sub { padding-left: 1.7em; color: var(--muted); font-size: 0.8rem; }
+#bd-toc a:hover { background: var(--accent-soft); color: var(--accent); }
+#bd-toc .empty { display: block; font-size: 0.78rem; color: #b3aca2; padding: 0.3em 0.6em; }
+
+.bd-side .note {
+  font-size: 0.7rem;
+  color: var(--muted);
+  margin: 1rem 0.6rem 0;
+  line-height: 1.6;
+}
+
+@media (max-width: 1100px) {
+  body { padding-left: 0; }
+  .bd-side { display: none; }
+}
+
+.bd-section-label {
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 2rem 0 0.8rem;
+}
+
+/* guide details form */
+.bd-meta {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.2rem 1.4rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.9rem 1.2rem;
+}
+
+.bd-meta label {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--muted);
+  margin-bottom: 0.25em;
+}
+
+.bd-meta input[type="text"], .bd-meta textarea {
+  width: 100%;
+  font: inherit;
+  font-size: 0.95rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.45em 0.7em;
+  background: var(--bg);
+  color: var(--fg);
+}
+
+.bd-meta input:focus, .bd-meta textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.bd-meta .full { grid-column: 1 / -1; }
+.bd-meta textarea { resize: vertical; min-height: 3.2em; }
+
+.bd-hero-thumb { display: flex; align-items: center; gap: 0.8rem; }
+.bd-hero-thumb img { height: 3.2rem; border-radius: 8px; border: 1px solid var(--border); }
+
+@media (max-width: 640px) { .bd-meta { grid-template-columns: 1fr; } }
+
+/* formatting toolbar — lives inside the active text cell */
+.bd-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  align-items: center;
+  background: #fbf8f3;
+  border-bottom: 1px solid var(--border);
+  padding: 0.3rem 0.5rem;
+}
+
+.bd-toolbar[hidden] { display: none; }
+
+.bd-toolbar button {
+  border: none;
+  padding: 0.3em 0.65em;
+  font-size: 0.88rem;
+  border-radius: 6px;
+}
+
+.bd-toolbar button:hover { background: var(--accent-soft); }
+.bd-toolbar .sep { width: 1px; background: var(--border); margin: 0.2rem 0.3rem; }
+.bd-toolbar .b { font-weight: 700; }
+.bd-toolbar .i { font-style: italic; }
+.bd-toolbar .u { text-decoration: underline; }
+.bd-toolbar .hint { margin-left: auto; align-self: center; font-size: 0.72rem; color: var(--muted); padding-right: 0.4rem; }
+
+/* cells */
+.cell {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin-bottom: 0.9rem;
+  overflow: hidden;
+}
+
+.cell:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+
+.cell-tools {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.3rem 0.5rem;
+  background: #f7f3ec;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.78rem;
+}
+
+.cell-tools .type {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 0 0.5em;
+}
+
+.cell-tools button {
+  border: none;
+  background: none;
+  padding: 0.25em 0.55em;
+  font-size: 0.8rem;
+  color: var(--muted);
+  border-radius: 6px;
+}
+
+.cell-tools button:hover { background: var(--accent-soft); color: var(--accent); }
+.cell-tools .spacer { flex: 1; }
+.cell-tools button.del:hover { background: #fde8e8; color: #b91c1c; }
+
+.cell-body { padding: 1rem 1.3rem; }
+
+.cell-edit { outline: none; min-height: 1.6em; }
+.cell-edit:empty::before { content: "Write here — use the toolbar for headings, lists…"; color: #b3aca2; }
+.cell-edit h1 { font-size: 1.7rem; margin: 0.4em 0 0.4em; }
+.cell-edit h2 { font-size: 1.45rem; margin: 0.4em 0 0.4em; }
+.cell-edit h3 { font-size: 1.2rem;  margin: 0.4em 0 0.3em; }
+.cell-edit h4 { font-size: 1.05rem; margin: 0.4em 0 0.3em; }
+.cell-edit h5 { font-size: 0.95rem; margin: 0.4em 0 0.3em; text-transform: uppercase; letter-spacing: 0.06em; }
+.cell-edit p { margin: 0 0 0.6em; }
+.cell-edit a { color: var(--accent); }
+
+/* media cells */
+.media-pick { display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap; }
+.media-pick .hint { font-size: 0.78rem; color: var(--muted); }
+
+.cell figure { margin: 0; }
+.cell figure img { width: 100%; border-radius: 10px; border: 1px solid var(--border); display: block; }
+
+/* image width options (mirrored in themes/handbook.css for the export) */
+.cell figure.hb-w-full { width: 100%; }
+.cell figure.hb-w-1-2  { width: 50%; }
+.cell figure.hb-w-1-3  { width: 33.333%; }
+.cell figure.hb-w-1-4  { width: 25%; }
+.cell figure.hb-w-1-5  { width: 20%; }
+
+.cell-tools select {
+  font: inherit;
+  font-size: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--panel);
+  color: var(--muted);
+  padding: 0.1em 0.3em;
+}
+
+/* code cells */
+.cell textarea.code-edit {
+  width: 100%;
+  min-height: 7em;
+  resize: none;
+  border: none;
+  outline: none;
+  background: #211f2b;
+  color: #e8e6f0;
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  line-height: 1.6;
+  padding: 1em 1.2em;
+  border-radius: 10px;
+  tab-size: 4;
+}
+
+.cell textarea.code-edit::placeholder { color: #6f6a80; }
+.cell figcaption {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-top: 0.5em;
+  outline: none;
+}
+.cell figcaption:empty::before { content: "Add a caption (optional)"; color: #c9c2b6; }
+
+.cell .videobox { aspect-ratio: 16 / 9; background: #211f2b; border-radius: 10px; overflow: hidden; }
+.cell .videobox video, .cell .videobox iframe { width: 100%; height: 100%; border: none; display: block; }
+
+/* add-cell bar */
+.bd-addbar {
+  display: flex;
+  gap: 0.6rem;
+  justify-content: center;
+  padding: 1rem 0 0;
+}
+
+.bd-addbar button { border-style: dashed; color: var(--muted); }
+.bd-addbar button:hover { color: var(--accent); }
+
+.bd-note { text-align: center; font-size: 0.78rem; color: var(--muted); margin-top: 1.2rem; }
+
+.flash {
+  position: fixed;
+  bottom: 1.2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #211f2b;
+  color: #fff;
+  border-radius: 10px;
+  padding: 0.6em 1.2em;
+  font-size: 0.88rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+  z-index: 40;
+}
+.flash.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<header class="bd-top">
+  <div class="brand">Handbook Builder<span class="sub">writes user guides in the Handbook template</span></div>
+  <div class="spacer"></div>
+  <button id="btn-open" title="Open a saved draft (.json) or a previously exported guide (.html)">Open&hellip;</button>
+  <button id="btn-save" title="Download the draft as a .json file to continue later">Save draft</button>
+  <button id="btn-preview" title="Open the generated guide in a new tab">Preview</button>
+  <button id="btn-export" class="primary" title="Download the finished guide as a single .html file">Download HTML</button>
+  <button id="btn-clear" title="Delete everything and start over">Start over</button>
+</header>
+
+<aside class="bd-side">
+  <div class="label">Draft ToC</div>
+  <nav id="bd-toc"></nav>
+  <p class="note">Built from your headings as you type.<br>
+  H1&ndash;H2 = chapter &middot; H3 = subsection.<br>
+  Click an entry to jump to its cell.</p>
+</aside>
+
+<main>
+  <div class="bd-section-label">Guide details (the hero &amp; sidebar)</div>
+  <div class="bd-meta">
+    <div class="full">
+      <label for="m-title">Guide title</label>
+      <input type="text" id="m-title" placeholder="Getting things done in App Name">
+    </div>
+    <div class="full">
+      <label for="m-lead">Lead — one or two sentences under the title</label>
+      <textarea id="m-lead" placeholder="Everything you need to work with the application…"></textarea>
+    </div>
+    <div>
+      <label for="m-app">App / sidebar name</label>
+      <input type="text" id="m-app" placeholder="App Name">
+    </div>
+    <div>
+      <label for="m-version">Version</label>
+      <input type="text" id="m-version" placeholder="1.0">
+    </div>
+    <div>
+      <label for="m-owner">Owner</label>
+      <input type="text" id="m-owner" placeholder="Lab IT">
+    </div>
+    <div>
+      <label for="m-updated">Updated</label>
+      <input type="text" id="m-updated" placeholder="July 2026">
+    </div>
+    <div class="full">
+      <label>Hero image</label>
+      <div class="bd-hero-thumb">
+        <img id="m-hero-thumb" alt="" hidden>
+        <button id="btn-hero-img">Choose image&hellip;</button>
+        <button id="btn-hero-clear" hidden>Remove</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="bd-section-label">Content — cells become the guide, top to bottom</div>
+
+  <div class="bd-toolbar" id="toolbar" hidden>
+    <button data-block="p" title="Paragraph">P</button>
+    <button data-block="h1" title="Heading 1 — chapter, appears in the ToC">H1</button>
+    <button data-block="h2" title="Heading 2 — chapter, appears in the ToC">H2</button>
+    <button data-block="h3" title="Heading 3 — subsection, appears in the ToC">H3</button>
+    <button data-block="h4" title="Heading 4">H4</button>
+    <button data-block="h5" title="Heading 5">H5</button>
+    <span class="sep"></span>
+    <button data-cmd="bold" class="b" title="Bold (Ctrl+B)">B</button>
+    <button data-cmd="italic" class="i" title="Italic (Ctrl+I)">I</button>
+    <button data-cmd="underline" class="u" title="Underline (Ctrl+U)">U</button>
+    <span class="sep"></span>
+    <button data-cmd="insertUnorderedList" title="Bullet list">&bull; List</button>
+    <button data-cmd="insertOrderedList" title="Numbered list">1. List</button>
+    <span class="sep"></span>
+    <button data-act="link" title="Turn selection into a link">Link</button>
+    <button data-cmd="removeFormat" title="Clear formatting">Clear</button>
+    <span class="hint">H1&ndash;H2 = chapters, H3 = subsections &rarr; they build the ToC</span>
+  </div>
+
+  <div id="cells"></div>
+
+  <div class="bd-addbar">
+    <button data-add="text">+ Text</button>
+    <button data-add="image">+ Image</button>
+    <button data-add="video">+ Video</button>
+    <button data-add="code">+ Code</button>
+  </div>
+
+  <p class="bd-note">Autosaves to this browser as you type. Images and uploaded
+  videos are embedded into the exported file, so the result is one
+  self-contained .html you can put on the intranet.</p>
+</main>
+
+<input type="file" id="file-input" hidden>
+<div class="flash" id="flash"></div>
+
+<script>
+(function () {
+  'use strict';
+
+  const cellsEl = document.getElementById('cells');
+  const fileInput = document.getElementById('file-input');
+  const STORE_KEY = 'handbook-builder-v1';
+  const meta = {};
+  ['title', 'lead', 'app', 'version', 'owner', 'updated'].forEach(function (k) {
+    meta[k] = document.getElementById('m-' + k);
+  });
+  let heroImgData = null;
+
+  /* ═══════════ cells ═══════════ */
+
+  function makeCell(type, data) {
+    const cell = document.createElement('div');
+    cell.className = 'cell';
+    cell.dataset.type = type;
+    cell.innerHTML =
+      '<div class="cell-tools">' +
+        '<span class="type">' + type + '</span>' +
+        (type === 'image'
+          ? '<select class="imgw" title="Image width">' +
+              '<option value="full">Full width</option>' +
+              '<option value="1-2">1/2 width</option>' +
+              '<option value="1-3">1/3 width</option>' +
+              '<option value="1-4">1/4 width</option>' +
+              '<option value="1-5">1/5 width</option>' +
+            '</select>'
+          : '') +
+        (type === 'code'
+          ? '<select class="codelang" title="Language">' +
+              LANG_OPTIONS.map(function (l) {
+                return '<option value="' + l[0] + '">' + l[1] + '</option>';
+              }).join('') +
+            '</select>'
+          : '') +
+        '<button data-act="up" title="Move up">&uarr;</button>' +
+        '<button data-act="down" title="Move down">&darr;</button>' +
+        '<span class="spacer"></span>' +
+        '<button data-act="add-text" title="Add text cell below">+ text</button>' +
+        '<button data-act="add-image" title="Add image cell below">+ image</button>' +
+        '<button data-act="add-video" title="Add video cell below">+ video</button>' +
+        '<button data-act="add-code" title="Add code cell below">+ code</button>' +
+        '<button data-act="del" class="del" title="Delete cell">&#10005;</button>' +
+      '</div>' +
+      '<div class="cell-body"></div>';
+    const body = cell.querySelector('.cell-body');
+
+    if (type === 'text') {
+      const ed = document.createElement('div');
+      ed.className = 'cell-edit';
+      ed.contentEditable = 'true';
+      if (data && data.html) ed.innerHTML = data.html;
+      body.appendChild(ed);
+    } else if (type === 'code') {
+      const ta = document.createElement('textarea');
+      ta.className = 'code-edit';
+      ta.spellcheck = false;
+      ta.placeholder = 'Paste or type code…';
+      if (data && data.code) ta.value = data.code;
+      body.appendChild(ta);
+      if (data && data.lang) cell.querySelector('.codelang').value = data.lang;
+      requestAnimationFrame(function () { growCode(ta); });
+    } else if (data && data.src) {
+      setMedia(cell, data);
+    } else {
+      body.innerHTML =
+        '<div class="media-pick">' +
+          '<button data-act="pick-file">Upload ' + type + '&hellip;</button>' +
+          '<button data-act="pick-url">From URL&hellip;</button>' +
+          '<span class="hint">' +
+            (type === 'image'
+              ? 'Uploads are embedded into the exported file.'
+              : 'Uploads are embedded (careful with size) — or link a file on the internal server.') +
+          '</span>' +
+        '</div>';
+    }
+    return cell;
+  }
+
+  function setMedia(cell, data) {
+    const body = cell.querySelector('.cell-body');
+    if (cell.dataset.type === 'image') {
+      const w = data.width || 'full';
+      body.innerHTML = '<figure class="hb-w-' + w + '"><img><figcaption contenteditable="true"></figcaption></figure>';
+      body.querySelector('img').src = data.src;
+      if (data.caption) body.querySelector('figcaption').innerHTML = data.caption;
+      cell.querySelector('.imgw').value = w;
+    } else {
+      body.innerHTML = '<div class="videobox"></div>';
+      const box = body.querySelector('.videobox');
+      if (data.kind === 'iframe') {
+        const f = document.createElement('iframe');
+        f.src = data.src;
+        f.allowFullscreen = true;
+        box.appendChild(f);
+      } else {
+        const v = document.createElement('video');
+        v.controls = true;
+        v.src = data.src;
+        box.appendChild(v);
+      }
+      box.dataset.kind = data.kind || 'video';
+    }
+  }
+
+  function addCell(type, afterCell, data) {
+    const cell = makeCell(type, data);
+    if (afterCell) afterCell.after(cell); else cellsEl.appendChild(cell);
+    if (type === 'text' && !(data && data.html)) cell.querySelector('.cell-edit').focus();
+    if (type === 'code' && !(data && data.code)) cell.querySelector('.code-edit').focus();
+    scheduleSave();
+    return cell;
+  }
+
+  // code textareas grow with their content
+  function growCode(ta) {
+    ta.style.height = 'auto';
+    ta.style.height = (ta.scrollHeight + 2) + 'px';
+  }
+
+  cellsEl.addEventListener('input', function (e) {
+    if (e.target.classList.contains('code-edit')) growCode(e.target);
+  });
+
+  /* cell + add-bar actions */
+
+  document.querySelector('.bd-addbar').addEventListener('click', function (e) {
+    const t = e.target.closest('button[data-add]');
+    if (t) addCell(t.dataset.add, null, null);
+  });
+
+  cellsEl.addEventListener('click', function (e) {
+    const btn = e.target.closest('button[data-act]');
+    if (!btn) return;
+    const cell = btn.closest('.cell');
+    const act = btn.dataset.act;
+
+    if (act === 'del') {
+      cell.remove();
+    } else if (act === 'up' && cell.previousElementSibling) {
+      cell.previousElementSibling.before(cell);
+    } else if (act === 'down' && cell.nextElementSibling) {
+      cell.nextElementSibling.after(cell);
+    } else if (act === 'add-text') {
+      addCell('text', cell, null);
+    } else if (act === 'add-image') {
+      addCell('image', cell, null);
+    } else if (act === 'add-video') {
+      addCell('video', cell, null);
+    } else if (act === 'add-code') {
+      addCell('code', cell, null);
+    } else if (act === 'pick-file') {
+      fileInput.accept = cell.dataset.type === 'image' ? 'image/*' : 'video/*';
+      fileInput.onchange = function () {
+        const f = fileInput.files[0];
+        if (!f) return;
+        const reader = new FileReader();
+        reader.onload = function () {
+          setMedia(cell, { src: reader.result, kind: 'video' });
+          scheduleSave();
+        };
+        reader.readAsDataURL(f);
+        fileInput.value = '';
+      };
+      fileInput.click();
+    } else if (act === 'pick-url') {
+      const url = prompt(cell.dataset.type === 'image'
+        ? 'Image URL:'
+        : 'Video URL (a .mp4/.webm file, or an embed link):');
+      if (!url) return;
+      const isFile = /\.(mp4|webm|ogg|mov)(\?|#|$)/i.test(url);
+      setMedia(cell, {
+        src: url,
+        kind: cell.dataset.type === 'video' && !isFile ? 'iframe' : 'video'
+      });
+      scheduleSave();
+    }
+    scheduleSave();
+  });
+
+  // image width + code language selectors
+  cellsEl.addEventListener('change', function (e) {
+    if (e.target.matches('select.imgw')) {
+      const figure = e.target.closest('.cell').querySelector('figure');
+      if (figure) {
+        figure.className = 'hb-w-' + e.target.value;
+        scheduleSave();
+      }
+    } else if (e.target.matches('select.codelang')) {
+      scheduleSave();
+    }
+  });
+
+  /* ═══════════ formatting toolbar (follows the active text cell) ═══════════ */
+
+  const toolbar = document.getElementById('toolbar');
+
+  document.addEventListener('focusin', function (e) {
+    if (toolbar.contains(e.target)) return;
+    const cell = e.target.closest ? e.target.closest('.cell') : null;
+    if (cell && cell.dataset.type === 'text' && e.target.classList.contains('cell-edit')) {
+      cell.insertBefore(toolbar, cell.querySelector('.cell-body'));
+      toolbar.hidden = false;
+    } else {
+      toolbar.hidden = true;
+    }
+  });
+
+  document.getElementById('toolbar').addEventListener('mousedown', function (e) {
+    e.preventDefault();   // keep the text selection in the cell
+  });
+
+  document.getElementById('toolbar').addEventListener('click', function (e) {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    if (btn.dataset.block) {
+      document.execCommand('formatBlock', false, '<' + btn.dataset.block + '>');
+    } else if (btn.dataset.cmd) {
+      document.execCommand(btn.dataset.cmd, false, null);
+    } else if (btn.dataset.act === 'link') {
+      const url = prompt('Link URL:');
+      if (url) document.execCommand('createLink', false, url);
+    }
+    scheduleSave();
+  });
+
+  /* ═══════════ guide details ═══════════ */
+
+  const heroThumb = document.getElementById('m-hero-thumb');
+  const heroClear = document.getElementById('btn-hero-clear');
+
+  document.getElementById('btn-hero-img').addEventListener('click', function () {
+    fileInput.accept = 'image/*';
+    fileInput.onchange = function () {
+      const f = fileInput.files[0];
+      if (!f) return;
+      const reader = new FileReader();
+      reader.onload = function () {
+        heroImgData = reader.result;
+        heroThumb.src = heroImgData;
+        heroThumb.hidden = false;
+        heroClear.hidden = false;
+        scheduleSave();
+      };
+      reader.readAsDataURL(f);
+      fileInput.value = '';
+    };
+    fileInput.click();
+  });
+
+  heroClear.addEventListener('click', function () {
+    heroImgData = null;
+    heroThumb.hidden = true;
+    heroClear.hidden = true;
+    scheduleSave();
+  });
+
+  /* ═══════════ draft ToC ═══════════ */
+
+  const tocNav = document.getElementById('bd-toc');
+  let tocHeads = [];
+
+  function updateToc() {
+    tocHeads = [];
+    tocNav.innerHTML = '';
+    cellsEl.querySelectorAll('.cell[data-type="text"] .cell-edit').forEach(function (ed) {
+      ed.querySelectorAll('h1, h2, h3').forEach(function (h) {
+        const a = document.createElement('a');
+        a.textContent = h.textContent.trim() || '(untitled)';
+        a.className = h.tagName === 'H3' ? 'sub' : 'ch';
+        a.dataset.i = tocHeads.length;
+        tocHeads.push(h);
+        tocNav.appendChild(a);
+      });
+    });
+    if (!tocHeads.length) {
+      tocNav.innerHTML = '<span class="empty">Headings appear here as you write</span>';
+    }
+  }
+
+  tocNav.addEventListener('click', function (e) {
+    const a = e.target.closest('a');
+    if (!a) return;
+    const h = tocHeads[+a.dataset.i];
+    if (h) h.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+
+  /* ═══════════ autosave ═══════════ */
+
+  let saveTimer = null;
+
+  function scheduleSave() {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(function () { save(); updateToc(); }, 400);
+  }
+
+  function snapshot() {
+    return {
+      meta: Object.fromEntries(Object.keys(meta).map(function (k) { return [k, meta[k].value]; })),
+      hero: heroImgData,
+      cells: Array.from(cellsEl.children).map(function (cell) {
+        const type = cell.dataset.type;
+        if (type === 'text') {
+          return { type: 'text', html: cell.querySelector('.cell-edit').innerHTML };
+        }
+        if (type === 'image') {
+          const img = cell.querySelector('img');
+          const cap = cell.querySelector('figcaption');
+          const figure = cell.querySelector('figure');
+          const wMatch = figure && figure.className.match(/hb-w-(\S+)/);
+          return {
+            type: 'image',
+            src: img ? img.src : null,
+            caption: cap ? cap.innerHTML : '',
+            width: wMatch ? wMatch[1] : 'full'
+          };
+        }
+        if (type === 'code') {
+          return {
+            type: 'code',
+            lang: cell.querySelector('.codelang').value,
+            code: cell.querySelector('.code-edit').value
+          };
+        }
+        const media = cell.querySelector('video, iframe');
+        const box = cell.querySelector('.videobox');
+        return { type: 'video', src: media ? media.src : null, kind: box ? box.dataset.kind : 'video' };
+      })
+    };
+  }
+
+  function save() {
+    try {
+      localStorage.setItem(STORE_KEY, JSON.stringify(snapshot()));
+    } catch (e) {
+      flash('Draft too large for autosave — export to keep your work');
+    }
+  }
+
+  function applyDraft(data) {
+    cellsEl.innerHTML = '';
+    heroImgData = data.hero || null;
+    if (heroImgData) heroThumb.src = heroImgData;
+    heroThumb.hidden = !heroImgData;
+    heroClear.hidden = !heroImgData;
+    Object.keys(meta).forEach(function (k) { meta[k].value = (data.meta && data.meta[k]) || ''; });
+    (data.cells || []).forEach(function (c) {
+      cellsEl.appendChild(makeCell(c.type, c));
+    });
+    if (!cellsEl.children.length) addCell('text', null, null);
+  }
+
+  function restore() {
+    let data = null;
+    try { data = JSON.parse(localStorage.getItem(STORE_KEY)); } catch (e) { /* corrupt draft */ }
+    if (!data) {
+      addCell('text', null, { html: '<h1>Getting started</h1><p>Write your first section here, or delete this cell.</p>' });
+      return;
+    }
+    applyDraft(data);
+  }
+
+  document.querySelector('main').addEventListener('input', scheduleSave);
+
+  document.getElementById('btn-clear').addEventListener('click', function () {
+    if (!confirm('Delete the whole draft and start over?')) return;
+    localStorage.removeItem(STORE_KEY);
+    location.reload();
+  });
+
+  /* ═══════════ save draft / open draft ═══════════ */
+
+  function draftName() {
+    return ((meta.app.value.trim() || meta.title.value.trim() || 'user-guide')
+      .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'user-guide');
+  }
+
+  document.getElementById('btn-save').addEventListener('click', function () {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob(
+      [JSON.stringify(snapshot(), null, 1)], { type: 'application/json' }));
+    a.download = draftName() + '-draft.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+    flash('Draft saved — open it later with Open…');
+  });
+
+  function extractEmbeddedDraft(html) {
+    const m = html.match(/<script type="application\/json" id="hb-draft">([\s\S]*?)<\/script>/);
+    return m ? JSON.parse(m[1]) : null;
+  }
+
+  document.getElementById('btn-open').addEventListener('click', function () {
+    fileInput.accept = '.json,.html,application/json,text/html';
+    fileInput.onchange = function () {
+      const f = fileInput.files[0];
+      fileInput.value = '';
+      if (!f) return;
+      const reader = new FileReader();
+      reader.onload = function () {
+        let data = null;
+        try {
+          data = reader.result.trimStart().startsWith('{')
+            ? JSON.parse(reader.result)
+            : extractEmbeddedDraft(reader.result);
+        } catch (e) { /* fall through to the error flash */ }
+        if (!data || !data.cells) {
+          flash(f.name + ' has no readable draft — use a saved .json or an exported guide');
+          return;
+        }
+        const hasWork = meta.title.value.trim() || cellsEl.textContent.trim();
+        if (hasWork && !confirm('Replace the current draft with "' + f.name + '"?')) return;
+        applyDraft(data);
+        scheduleSave();
+        flash('Opened ' + f.name);
+      };
+      reader.readAsText(f);
+    };
+    fileInput.click();
+  });
+
+  /* ═══════════ syntax highlighting (baked in at export — no JS in the output) ═══════════ */
+
+  const LANG_OPTIONS = [
+    ['plain', 'Plain text'], ['python', 'Python'], ['javascript', 'JavaScript / TS'],
+    ['sql', 'SQL'], ['bash', 'Bash / shell'], ['powershell', 'PowerShell'],
+    ['json', 'JSON'], ['yaml', 'YAML'], ['html', 'HTML / XML'], ['css', 'CSS'],
+    ['java', 'Java'], ['csharp', 'C#']
+  ];
+
+  // token classes: c comment · s string · n number · k keyword · v variable
+  const NUM = '\\b(?:0[xX][\\da-fA-F]+|\\d+\\.?\\d*(?:[eE][+-]?\\d+)?)\\b';
+  function kws(words) { return '\\b(?:' + words.replace(/ /g, '|') + ')\\b'; }
+
+  const LANGS = {
+    python: { rules: [
+      ['s', '"""[\\s\\S]*?"""|\'\'\'[\\s\\S]*?\'\'\'|"(?:[^"\\\\\\n]|\\\\.)*"|\'(?:[^\'\\\\\\n]|\\\\.)*\''],
+      ['c', '#.*'],
+      ['n', NUM],
+      ['k', kws('def class return if elif else for while in not and or import from as with try except finally raise lambda yield pass break continue global nonlocal assert del is None True False self async await print match case')]
+    ] },
+    javascript: { rules: [
+      ['c', '\\/\\*[\\s\\S]*?\\*\\/|\\/\\/.*'],
+      ['s', '`(?:[^`\\\\]|\\\\.)*`|"(?:[^"\\\\\\n]|\\\\.)*"|\'(?:[^\'\\\\\\n]|\\\\.)*\''],
+      ['n', NUM],
+      ['k', kws('function return if else for while do switch case break continue new class extends super this const let var import from export default try catch finally throw typeof instanceof in of delete void async await yield true false null undefined interface type enum implements public private protected readonly static')]
+    ] },
+    sql: { flags: 'gi', rules: [
+      ['c', '--.*|\\/\\*[\\s\\S]*?\\*\\/'],
+      ['s', "'(?:[^']|'')*'"],
+      ['n', NUM],
+      ['k', kws('select from where join left right inner outer full on group by order having insert into values update set delete create table alter drop index view as and or not null in is like between union all distinct limit offset case when then else end count sum avg min max exists primary key foreign references')]
+    ] },
+    bash: { rules: [
+      ['c', '#.*'],
+      ['s', '"(?:[^"\\\\]|\\\\.)*"|\'[^\']*\''],
+      ['v', '\\$\\{?\\w+\\}?'],
+      ['n', NUM],
+      ['k', kws('if then else elif fi for while until do done case esac function echo export local return exit cd source set shift read sudo')]
+    ] },
+    powershell: { flags: 'gi', rules: [
+      ['c', '#.*'],
+      ['s', '"(?:[^"`]|`.)*"|\'[^\']*\''],
+      ['v', '\\$\\w+'],
+      ['n', NUM],
+      ['k', kws('param function if else elseif foreach for while switch return try catch finally throw begin process end filter in do until break continue')]
+    ] },
+    json: { rules: [
+      ['s', '"(?:[^"\\\\]|\\\\.)*"'],
+      ['n', NUM],
+      ['k', kws('true false null')]
+    ] },
+    yaml: { rules: [
+      ['c', '#.*'],
+      ['s', '"(?:[^"\\\\]|\\\\.)*"|\'[^\']*\''],
+      ['k', '^[ \\t-]*[\\w.-]+(?=\\s*:)'],
+      ['n', NUM + '|\\b(?:true|false|null|yes|no)\\b']
+    ] },
+    html: { rules: [
+      ['c', '<!--[\\s\\S]*?-->'],
+      ['k', '<\\/?[a-zA-Z][^<>]*>']
+    ] },
+    css: { rules: [
+      ['c', '\\/\\*[\\s\\S]*?\\*\\/'],
+      ['s', '"[^"]*"|\'[^\']*\''],
+      ['k', '[\\w-]+(?=\\s*:)'],
+      ['n', NUM + '(?:px|rem|em|%|vh|vw|s|ms)?|#[\\da-fA-F]{3,8}\\b']
+    ] },
+    java: { rules: [
+      ['c', '\\/\\*[\\s\\S]*?\\*\\/|\\/\\/.*'],
+      ['s', '"(?:[^"\\\\\\n]|\\\\.)*"'],
+      ['n', NUM],
+      ['k', kws('public private protected class interface extends implements static final void int long double float boolean char byte short new return if else for while do switch case break continue try catch finally throw throws import package this super true false null abstract synchronized volatile instanceof enum record var')]
+    ] },
+    csharp: { rules: [
+      ['c', '\\/\\*[\\s\\S]*?\\*\\/|\\/\\/.*'],
+      ['s', '\\$?@?"(?:[^"\\\\]|\\\\.)*"'],
+      ['n', NUM],
+      ['k', kws('public private protected internal class interface struct record static readonly const void int long double float decimal bool string char var new return if else foreach for while do switch case break continue try catch finally throw using namespace this base true false null async await get set is as in out ref')]
+    ] }
+  };
+  LANGS.typescript = LANGS.javascript;
+
+  function highlight(src, lang) {
+    const def = LANGS[lang];
+    if (!def) return esc(src);
+    if (!def._re) {
+      def._re = new RegExp(
+        def.rules.map(function (r) { return '(' + r[1] + ')'; }).join('|'),
+        def.flags || 'gm');
+    }
+    const re = def._re;
+    re.lastIndex = 0;
+    let out = '', last = 0, m;
+    while ((m = re.exec(src))) {
+      out += esc(src.slice(last, m.index));
+      for (let g = 1; g <= def.rules.length; g++) {
+        if (m[g] !== undefined) {
+          out += '<span class="tok-' + def.rules[g - 1][0] + '">' + esc(m[g]) + '</span>';
+          break;
+        }
+      }
+      last = re.lastIndex;
+      if (m[0] === '') re.lastIndex++;   // never loop on a zero-length match
+    }
+    return out + esc(src.slice(last));
+  }
+
+  /* ═══════════ export ═══════════ */
+
+  function esc(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function contentHtml() {
+    const out = document.createElement('div');
+    Array.from(cellsEl.children).forEach(function (cell) {
+      const type = cell.dataset.type;
+      if (type === 'text') {
+        const clone = cell.querySelector('.cell-edit').cloneNode(true);
+        if (!clone.textContent.trim() && !clone.querySelector('img')) return;
+        // hero owns the page's h1 — demote cell h1s to h2 (still a ToC chapter)
+        clone.querySelectorAll('h1').forEach(function (h1) {
+          const h2 = document.createElement('h2');
+          while (h1.firstChild) h2.appendChild(h1.firstChild);
+          h1.replaceWith(h2);
+        });
+        out.insertAdjacentHTML('beforeend', clone.innerHTML + '\n');
+      } else if (type === 'image') {
+        const img = cell.querySelector('img');
+        if (!img) return;
+        const cap = cell.querySelector('figcaption');
+        const figure = cell.querySelector('figure');
+        const wMatch = figure && figure.className.match(/hb-w-(\S+)/);
+        out.insertAdjacentHTML('beforeend',
+          '<figure class="hb-w-' + (wMatch ? wMatch[1] : 'full') + '">' +
+          '<img src="' + img.src.replace(/"/g, '&quot;') + '" alt="">' +
+          (cap && cap.textContent.trim() ? '<figcaption>' + cap.innerHTML + '</figcaption>' : '') +
+          '</figure>\n');
+      } else if (type === 'code') {
+        const ta = cell.querySelector('.code-edit');
+        if (!ta || !ta.value.trim()) return;
+        const lang = cell.querySelector('.codelang').value;
+        out.insertAdjacentHTML('beforeend',
+          '<pre class="hb-code"' + (lang !== 'plain' ? ' data-lang="' + lang + '"' : '') +
+          '><code>' + highlight(ta.value, lang) + '</code></pre>\n');
+      } else {
+        const media = cell.querySelector('video, iframe');
+        if (!media) return;
+        const src = media.src.replace(/"/g, '&quot;');
+        out.insertAdjacentHTML('beforeend',
+          '<div class="hb-video">' +
+          (media.tagName === 'IFRAME'
+            ? '<iframe src="' + src + '" allowfullscreen></iframe>'
+            : '<video controls src="' + src + '"></video>') +
+          '</div>\n');
+      }
+    });
+    return out.innerHTML;
+  }
+
+  async function buildHtml() {
+    let css = '', js = '';
+    try {
+      css = await (await fetch('../themes/handbook.css')).text();
+      js = await (await fetch('../handbook.js')).text();
+    } catch (e) { /* fall back to linked files below */ }
+
+    const m = {};
+    Object.keys(meta).forEach(function (k) { m[k] = meta[k].value.trim(); });
+    const title = m.title || 'User Guide';
+    const app = m.app || title;
+    const metaLine = [
+      m.version && '<span>Version ' + esc(m.version) + '</span>',
+      m.updated && '<span>Updated ' + esc(m.updated) + '</span>',
+      m.owner && '<span>Owner: ' + esc(m.owner) + '</span>'
+    ].filter(Boolean).join('\n          ');
+
+    const art = heroImgData
+      ? '<div class="hb-hero-art"><img src="' + heroImgData + '" alt=""></div>'
+      : '';
+
+    return '<!DOCTYPE html>\n<html lang="en">\n<head>\n' +
+      '<meta charset="UTF-8">\n' +
+      '<meta name="viewport" content="width=device-width, initial-scale=1.0">\n' +
+      '<title>' + esc(app) + ' — User Guide</title>\n' +
+      (css ? '<style>\n' + css + '\n</style>\n'
+           : '<link rel="stylesheet" href="themes/handbook.css">\n') +
+      '</head>\n<body class="handbook">\n\n' +
+      '<aside class="hb-sidebar">\n' +
+      '  <div class="hb-brand">\n' +
+      '    <div class="title">' + esc(app) + '</div>\n' +
+      '    <div class="sub">User Guide' + (m.version ? ' &middot; v' + esc(m.version) : '') + '</div>\n' +
+      '  </div>\n' +
+      '  <nav class="hb-toc"></nav>\n' +
+      '  <div class="hb-hints">\n' +
+      '    <kbd>/</kbd> search &nbsp;&middot;&nbsp; <kbd>T</kbd> hide contents<br>\n' +
+      '    <kbd>Enter</kbd> next match &nbsp;&middot;&nbsp; <kbd>&#8679;Enter</kbd> previous\n' +
+      '  </div>\n' +
+      '</aside>\n\n' +
+      '<main class="hb-main">\n' +
+      '  <header class="hb-hero">\n' +
+      '    <div class="hb-hero-inner"' + (heroImgData ? '' : ' style="grid-template-columns: 1fr;"') + '>\n' +
+      '      <div>\n' +
+      '        <span class="eyebrow">User Guide</span>\n' +
+      '        <h1>' + esc(title) + '</h1>\n' +
+      (m.lead ? '        <p class="lead">' + esc(m.lead) + '</p>\n' : '') +
+      (metaLine ? '        <div class="hb-meta">' + metaLine + '</div>\n' : '') +
+      '      </div>\n' +
+      (art ? '      ' + art + '\n' : '') +
+      '    </div>\n' +
+      '    <div class="hb-scrollhint">Scroll</div>\n' +
+      '  </header>\n\n' +
+      '  <div class="hb-content">\n' + contentHtml() + '\n  </div>\n' +
+      '</main>\n\n' +
+      (js ? '<script>\n' + js.replace(/<\/script>/gi, '<\\/script>') + '\n<\/script>\n'
+          : '<script src="handbook.js"><\/script>\n') +
+      // the draft rides along inside the guide, so any exported file can be
+      // reopened in the builder (Open…) and edited further
+      '<script type="application/json" id="hb-draft">' +
+      JSON.stringify(snapshot()).replace(/</g, '\\u003c') +
+      '<\/script>\n' +
+      '</body>\n</html>\n';
+  }
+
+  document.getElementById('btn-export').addEventListener('click', function () {
+    buildHtml().then(function (html) {
+      const name = (meta.app.value.trim() || meta.title.value.trim() || 'user-guide')
+        .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') + '-guide.html';
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
+      a.download = name;
+      a.click();
+      URL.revokeObjectURL(a.href);
+      flash('Downloaded ' + name);
+    });
+  });
+
+  document.getElementById('btn-preview').addEventListener('click', function () {
+    buildHtml().then(function (html) {
+      const url = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
+      window.open(url, '_blank');
+    });
+  });
+
+  /* ═══════════ misc ═══════════ */
+
+  let flashTimer = null;
+  function flash(msg) {
+    const el = document.getElementById('flash');
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(flashTimer);
+    flashTimer = setTimeout(function () { el.classList.remove('show'); }, 2600);
+  }
+
+  restore();
+  updateToc();
+
+  // small hook for testing / power users
+  window.HandbookBuilder = {
+    buildHtml: buildHtml, addCell: addCell, snapshot: snapshot,
+    updateToc: updateToc, applyDraft: applyDraft
+  };
+})();
+</script>
+</body>
+</html>

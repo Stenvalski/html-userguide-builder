@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>App Name — User Guide</title>
+<link rel="stylesheet" href="themes/handbook.css">
+</head>
+<body class="handbook">
+
+<!-- ══════════════════════════════════════════════════════════════
+     Sidebar: edit the brand block; the ToC below it fills itself
+     from every h2/h3 in .hb-content. Search box is added for you.
+     ══════════════════════════════════════════════════════════════ -->
+<aside class="hb-sidebar">
+  <div class="hb-brand">
+    <div class="title">App Name</div>
+    <div class="sub">User Guide &middot; v1.0</div>
+  </div>
+  <nav class="hb-toc"></nav>
+  <div class="hb-hints">
+    <kbd>/</kbd> search &nbsp;&middot;&nbsp; <kbd>T</kbd> hide contents<br>
+    <kbd>Enter</kbd> next match &nbsp;&middot;&nbsp; <kbd>&#8679;Enter</kbd> previous
+  </div>
+</aside>
+
+<main class="hb-main">
+
+  <!-- ═══════════════════════════════════════════════════════════
+       Hero: title, lead, meta line, and an image on the right.
+       Swap the placeholder div for:  <img src="hero.png" alt="...">
+       ═══════════════════════════════════════════════════════════ -->
+  <header class="hb-hero">
+    <div class="hb-hero-inner">
+      <div>
+        <span class="eyebrow">User Guide</span>
+        <h1>Getting things done in App Name</h1>
+        <p class="lead">Everything you need to work with the application —
+        from first login to the parts you'll only need once a year.</p>
+        <div class="hb-meta">
+          <span>Version 1.0</span>
+          <span>Updated July 2026</span>
+          <span>Owner: Lab IT</span>
+        </div>
+      </div>
+      <div class="hb-hero-art">
+        <div class="placeholder">Hero image<br>(replace with an &lt;img&gt;)</div>
+      </div>
+    </div>
+    <div class="hb-scrollhint">Scroll</div>
+  </header>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       Content: h2 = chapter, h3 = subsection. Both appear in the
+       ToC automatically and get linkable ids from their text.
+       ═══════════════════════════════════════════════════════════ -->
+  <div class="hb-content">
+
+    <h2>Getting started</h2>
+    <p>Introduce the application in two or three sentences: what it's for, who
+    uses it, and what it replaces. Keep the detail for the sections below —
+    this is the part everyone reads.</p>
+
+    <h3>Requesting access</h3>
+    <p>Describe how a new user gets an account. Reference interface elements
+    with the <span class="ui">ui</span> class — like &ldquo;click
+    <span class="ui">Request access</span> and pick your team&rdquo; — and
+    keyboard keys with <kbd>K</kbd> tags.</p>
+    <div class="hb-callout note">Access requests are approved by your team
+    lead, usually within one working day.</div>
+
+    <h3>First login</h3>
+    <p>Walk through the first session. A screenshot in a window frame:</p>
+    <div class="hb-screen">
+      <div class="bar"><i></i><i></i><i></i><span class="addr">apps.internal/app-name</span></div>
+      <div class="placeholder">[ Screenshot: the start page after login ]</div>
+    </div>
+    <div class="hb-callout tip">Bookmark the page after logging in — the app
+    remembers where you left off.</div>
+
+    <h2>Everyday tasks</h2>
+    <p>One h3 per task people do daily. Lead with the task, not the feature
+    name — users search for &ldquo;export results&rdquo;, not
+    &ldquo;the export module&rdquo;.</p>
+
+    <h3>Creating an entry</h3>
+    <p>Numbered steps work best for anything with a fixed order:</p>
+    <ol>
+      <li>Open <span class="ui">Entries</span> and click <span class="ui">New</span>.</li>
+      <li>Fill in the required fields — everything marked with a red asterisk.</li>
+      <li>Press <kbd>Ctrl</kbd>+<kbd>S</kbd> or click <span class="ui">Save</span>.</li>
+    </ol>
+
+    <h3>Watching the walkthrough</h3>
+    <p>Short screen recordings often beat screenshots. Drop a
+    <code>&lt;video&gt;</code> or an embed iframe inside
+    <code>.hb-video</code> and it stays 16:9 and inside the column:</p>
+    <div class="hb-video">
+      <div class="placeholder">Video — replace with &lt;video controls src="..."&gt; or an &lt;iframe&gt;</div>
+    </div>
+    <div class="hb-callout warn">Videos hosted outside the company network
+    won't load for lab terminals — keep files on the internal server.</div>
+
+    <h2>Reference</h2>
+    <p>The look-it-up section: limits, statuses, shortcuts. Tables render
+    styled out of the box:</p>
+    <table>
+      <thead>
+        <tr><th>Status</th><th>Meaning</th><th>Who can change it</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Draft</td><td>Visible only to you</td><td>You</td></tr>
+        <tr><td>Submitted</td><td>Waiting for review</td><td>Reviewer</td></tr>
+        <tr><td>Approved</td><td>Locked and archived</td><td>QA only</td></tr>
+      </tbody>
+    </table>
+    <p>Wrap wide tables in <code>&lt;div class="hb-table-scroll"&gt;</code> so
+    they scroll sideways instead of breaking the page.</p>
+
+    <h3>Keyboard shortcuts</h3>
+    <table>
+      <thead><tr><th>Keys</th><th>Action</th></tr></thead>
+      <tbody>
+        <tr><td><kbd>Ctrl</kbd>+<kbd>S</kbd></td><td>Save the open entry</td></tr>
+        <tr><td><kbd>Q</kbd></td><td>Jump to your queue</td></tr>
+      </tbody>
+    </table>
+
+    <h2>Troubleshooting</h2>
+    <p>One h3 per symptom, phrased the way users would say it.</p>
+
+    <h3>&ldquo;My changes aren't saving&rdquo;</h3>
+    <p>State the likely cause first, the fix second, and when to escalate
+    last.</p>
+    <div class="hb-callout ok">Fixed in version 1.1 — update via the
+    <span class="ui">Help</span> menu if you still see this.</div>
+
+    <h2>Support</h2>
+    <p>Where to go when the guide isn't enough: contact, response times, and
+    what to include in a report. Search this page first — press <kbd>/</kbd>
+    and type what you're looking for.</p>
+
+  </div>
+</main>
+
+<script src="handbook.js"></script>
+</body>
+</html>
